@@ -30,30 +30,30 @@ func ConvertToHeader(rows *sql.Rows) (*Header, error) {
 	return &header, nil
 }
 
-func ConvertToInpection(rows *sql.Rows) (*[]Inpection, error) {
+func ConvertToInspection(rows *sql.Rows) (*[]Inspection, error) {
 	defer rows.Close()
-	inpections := make([]Inpection, 0)
+	inspections := make([]Inspection, 0)
 	i := 0
 
 	for rows.Next() {
 		i++
-		inpection := Inpection{}
+		inspection := Inspection{}
 		err := rows.Scan(
-			&inpection.InspectionLot,
-			&inpection.Inspection,
-			&inpection.IsCancelled,
+			&inspection.InspectionLot,
+			&inspection.Inspection,
+			&inspection.IsCancelled,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return &inpections, err
+			return &inspections, err
 		}
 
-		inpections = append(inpections, inpection)
+		inspections = append(inspections, inspection)
 	}
 	if i == 0 {
 		fmt.Printf("DBに対象のレコードが存在しません。")
-		return &inpections, nil
+		return &inspections, nil
 	}
 
-	return &inpections, nil
+	return &inspections, nil
 }

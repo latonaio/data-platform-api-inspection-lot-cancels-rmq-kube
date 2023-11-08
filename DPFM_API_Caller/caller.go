@@ -73,8 +73,8 @@ func (c *DPFMAPICaller) cancelSqlProcess(
 	}
 
 	return &dpfm_api_output_formatter.Message{
-		Header: 		headerData,
-		Inspection:		&inspectionData,
+		Header:     headerData,
+		Inspection: &inspectionData,
 	}
 }
 
@@ -87,65 +87,61 @@ func (c *DPFMAPICaller) headerCancel(
 
 	header := c.HeaderRead(input, log)
 	if header == nil {
-		return nil, nil, nil, nil
+		return nil, nil
 	}
 	header.IsCancelled = input.Header.IsCancelled
 	res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{"message": header, "function": "InspectionLotHeader", "runtime_session_id": sessionID})
 	if err != nil {
 		err = xerrors.Errorf("rmq error: %w", err)
 		log.Error("%+v", err)
-		return nil, nil, nil, nil
+		return nil, nil
 	}
 	res.Success()
 	if !checkResult(res) {
 		output.SQLUpdateResult = getBoolPtr(false)
 		output.SQLUpdateError = "Header Data cannot cancel"
-		return nil, nil, nil, nil
+		return nil, nil
 	}
 	// headerのキャンセルが取り消された時は子に影響を与えない
 	if !*header.IsCancelled {
-		return header, nil, nil, nil
+		return header, nil
 	}
 
-	inpsections := c.InpsectionsRead(input, log)
-	for i := range *inpsections {
-		(*inpsections)[i].IsCancelled = input.Header.IsCancelled
-		res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{"message": (*items)[i], "function": "InspectionLotInspection", "runtime_session_id": sessionID})
+	items := c.ItemsRead(input, log)
+	for i := range *items {
+		(*items)[i].IsCancelled = input.InspectionPlan.IsCancelled
+		res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{"message": (*items)[i], "function": "InspectionPlanInspection", "runtime_session_id": sessionID})
 		if err != nil {
 			err = xerrors.Errorf("rmq error: %w", err)
 			log.Error("%+v", err)
-			return nil, nil, nil, nil
+			return nil, nil
 		}
 		res.Success()
 		if !checkResult(res) {
 			output.SQLUpdateResult = getBoolPtr(false)
-			output.SQLUpdateError = "Inpection Data cannot cancel"
-			return nil, nil, nil, nil
+			output.SQLUpdateError = "InspectionPlan Inspection Data cannot cancel"
+			return nil, nil
 		}
 	}
 
-	return header, inpsections
+	return header, items
 }
 
-func (c *DPFMAPICaller) inpsectionCancel(
+func (c *DPFMAPICaller) inspectionCancel(
 	input *dpfm_api_input_reader.SDC,
 	output *dpfm_api_output_formatter.SDC,
 	log *logger.Logger,
-) *[]dpfm_api_output_formatter.Inpection {
+) *[]dpfm_api_output_formatter.Inspection {
 	sessionID := input.RuntimeSessionID
 
-	inpsections := make([]dpfm_api_output_formatter.Inpection, 0)
-	for _, v := range input.Header.Inpection {
-		data := dpfm_api_output_formatter.Inpection{
-			InpectionLot:		input.Header.InpectionLot,
-			Inpection:			v.Inpection,
-			IsCancelled:		v.IsCancelled,
+	items := make([]dpfm_api_output_formatter.Inspection, 0)
+	for _, v := range input.InspectionPlan.Inspection {
+		data := dpfm_api_output_formatter.Inspection{
+			InspectionLot: input.InspectionPlan.InspectionLot,
+			Inspection:    v.Inspection,
+			IsCancelled:   v.IsCancelled,
 		}
-		res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{
-			"message":            data,
-			"function":           "InpectionLotInspection",
-			"runtime_session_id": sessionID,
-		})
+		res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{"message": data, "function": "InspectionPlanInspection", "runtime_session_id": sessionID})
 		if err != nil {
 			err = xerrors.Errorf("rmq error: %w", err)
 			log.Error("%+v", err)
@@ -154,14 +150,15 @@ func (c *DPFMAPICaller) inpsectionCancel(
 		res.Success()
 		if !checkResult(res) {
 			output.SQLUpdateResult = getBoolPtr(false)
-			output.SQLUpdateError = "Inpection Data cannot cancel"
+			output.SQLUpdateError = "Order Inspection Data cannot cancel"
 			return nil
 		}
 	}
-	// inpectionがキャンセル取り消しされた場合、headerのキャンセルも取り消す
-	if !*input.Header.Inpection[0].IsCancelled {
+
+	// inspectionがキャンセル取り消しされた場合、headerのキャンセルも取り消す
+	if !*input.Header.Inspection[0].IsCancelled {
 		header := c.HeaderRead(input, log)
-		header.IsCancelled = input.Header.Inpection[0].IsCancelled
+		header.IsCancelled = input.Header.Inspection[0].IsCancelled
 		res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{"message": header, "function": "InspectionLotHeader", "runtime_session_id": sessionID})
 		if err != nil {
 			err = xerrors.Errorf("rmq error: %w", err)

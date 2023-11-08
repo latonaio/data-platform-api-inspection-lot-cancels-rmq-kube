@@ -70,13 +70,13 @@ type SDC struct {
 }
 
 type Header struct {
-	InspectionLot		int     `json:"InspectionLot"`
-	IsCancelled			*bool   `json:"IsCancelled"`
-	Inspection			[]Inspection  `json:"Inspection"`
+	InspectionLot int          `json:"InspectionLot"`
+	IsCancelled   *bool        `json:"IsCancelled"`
+	Inspection    []Inspection `json:"Inspection"`
 }
 
 type Inspection struct {
-	InspectionLot		int     `json:"InspectionLot"`
-	Inspection			int     `json:"Inspection"`
-	IsCancelled			*bool   `json:"IsCancelled"`
+	InspectionLot int   `json:"InspectionLot"`
+	Inspection    int   `json:"Inspection"`
+	IsCancelled   *bool `json:"IsCancelled"`
 }

@@ -25,17 +25,17 @@ type SDC struct {
 }
 
 type Message struct {
-	Header		*[]Header		`json:"Header"`
-	Inspection	*[]Inspection	`json:"Inspection"`
+	Header     *Header       `json:"Header"`
+	Inspection *[]Inspection `json:"Inspection"`
 }
 
 type Header struct {
-	InspectionLot		int     `json:"InspectionLot"`
-	IsCancelled			*bool   `json:"IsCancelled"`
+	InspectionLot int   `json:"InspectionLot"`
+	IsCancelled   *bool `json:"IsCancelled"`
 }
 
 type Inspection struct {
-	InspectionLot		int     `json:"InspectionLot"`
-	Inspection			int     `json:"Inspection"`
-	IsCancelled			*bool   `json:"IsCancelled"`
+	InspectionLot int   `json:"InspectionLot"`
+	Inspection    int   `json:"Inspection"`
+	IsCancelled   *bool `json:"IsCancelled"`
 }
