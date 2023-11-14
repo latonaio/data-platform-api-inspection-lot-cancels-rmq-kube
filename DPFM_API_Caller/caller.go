@@ -107,9 +107,9 @@ func (c *DPFMAPICaller) headerCancel(
 		return header, nil
 	}
 
-	items := c.ItemsRead(input, log)
+	items := c.InspectionsRead(input, log)
 	for i := range *items {
-		(*items)[i].IsCancelled = input.InspectionPlan.IsCancelled
+		(*items)[i].IsCancelled = input.Header.IsCancelled
 		res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{"message": (*items)[i], "function": "InspectionPlanInspection", "runtime_session_id": sessionID})
 		if err != nil {
 			err = xerrors.Errorf("rmq error: %w", err)
@@ -135,9 +135,9 @@ func (c *DPFMAPICaller) inspectionCancel(
 	sessionID := input.RuntimeSessionID
 
 	items := make([]dpfm_api_output_formatter.Inspection, 0)
-	for _, v := range input.InspectionPlan.Inspection {
+	for _, v := range input.Header.Inspection {
 		data := dpfm_api_output_formatter.Inspection{
-			InspectionLot: input.InspectionPlan.InspectionLot,
+			InspectionLot: input.Header.InspectionLot,
 			Inspection:    v.Inspection,
 			IsCancelled:   v.IsCancelled,
 		}
